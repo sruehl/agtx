@@ -573,6 +573,28 @@ tmux -L agtx attach
 - **Worktrees**: `.agtx/worktrees/` in each project
 - **Tmux**: Dedicated server `agtx` with per-project sessions
 
+## Docker Sandbox
+
+Run agtx in an isolated Docker container so agents can only touch the project you pass in — no access to the rest of your home directory, credentials are read-only, and any files the agent creates in the project are owned by your host user.
+
+```bash
+# Run agtx on a project
+./docker/sandbox.sh path/to/your-project
+
+# Or from inside the project directory
+./docker/sandbox.sh
+```
+
+The sandbox:
+- Mounts only the target project as writable; everything else on the host is inaccessible
+- Copies `~/.claude` credentials read-only at startup so they are never written back to the host
+- Runs as a non-root user whose UID/GID matches your host user (files created inside the container appear correctly owned on the host)
+- Stores agtx state in named Docker volumes (persists across runs, isolated from your host's agtx data)
+- Pre-accepts the bypass permissions prompt, which is appropriate in an isolated container
+
+> [!NOTE]
+> Requires [Docker Engine](https://docs.docker.com/engine/install/) (Linux) or [Docker Desktop](https://docs.docker.com/desktop/) (macOS/Windows). The image is built automatically on first run and cached for subsequent runs.
+
 ## MCP Server
 
 The agtx MCP server (`agtx mcp-serve`) exposes the board to any coding agent session via the [Model Context Protocol](https://modelcontextprotocol.io). Used by the orchestrator agent and the brainstorm & sweep skills.
